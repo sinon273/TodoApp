@@ -3,12 +3,12 @@ package users_postgres_repository
 import (
 	"TodoApp/internal/core/domain"
 	core_error "TodoApp/internal/core/errors"
+	core_postgres_pool "TodoApp/internal/core/repository/postgres/pool"
 	"context"
 	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 func (r *UsersRepository) GetUser(ctx context.Context,
@@ -34,11 +34,8 @@ func (r *UsersRepository) GetUser(ctx context.Context,
 	)
 
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.User{}, fmt.Errorf("user with id='%d': %w",
-				id,
-				core_error.ErrNotFound,
-			)
+		if errors.Is(err, core_postgres_pool.ErrNoRows) {
+			return domain.User{}, fmt.Errorf("user with id='%s': %w", id, core_error.ErrNotFound)
 		}
 		return domain.User{}, fmt.Errorf("scan error: %w", err)
 	}
