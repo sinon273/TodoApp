@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 func GetIntQueryParam(r *http.Request, key string) (*int, error) {
@@ -12,7 +14,6 @@ func GetIntQueryParam(r *http.Request, key string) (*int, error) {
 	if param == "" {
 		return nil, nil
 	}
-
 	val, err := strconv.Atoi(param)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -20,5 +21,20 @@ func GetIntQueryParam(r *http.Request, key string) (*int, error) {
 			param, key, err, core_error.ErrInvalidArgument)
 	}
 
+	return &val, nil
+}
+
+func GetUUIDQueryParam(r *http.Request, key string) (*uuid.UUID, error) {
+	param := r.URL.Query().Get(key)
+	if param == "" {
+		return nil, nil
+	}
+	val, err := uuid.Parse(param)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"query param='%s' by key='%s' not a valid uuid: %v: %w",
+			param, key, err, core_error.ErrInvalidArgument,
+		)
+	}
 	return &val, nil
 }

@@ -3,12 +3,12 @@ package users_postgres_repository
 import (
 	"TodoApp/internal/core/domain"
 	core_error "TodoApp/internal/core/errors"
+	core_postgres_pool "TodoApp/internal/core/repository/postgres/pool"
 	"context"
 	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 func (r *UsersRepository) PatchUser(
@@ -50,9 +50,9 @@ func (r *UsersRepository) PatchUser(
 		&userModel.PhoneNumber,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, core_postgres_pool.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(
-				"user with if='%d' concurrently accessed: %w",
+				"user with id='%s' concurrently accessed: %w",
 				id,
 				core_error.ErrConflict,
 			)
