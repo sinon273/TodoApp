@@ -3,6 +3,7 @@ package core_http_response
 import (
 	core_error "TodoApp/internal/core/errors"
 	core_logger "TodoApp/internal/core/logger"
+	web_domain "TodoApp/internal/features/web/domain"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -89,4 +90,12 @@ func (h *HTTPResponseHandler) errorResponse(
 		Message: msg,
 	}
 	h.JSONResponse(response, statusCode)
+}
+
+func (h *HTTPResponseHandler) HTMLResponse(html web_domain.File) {
+	h.rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+	h.rw.WriteHeader(http.StatusOK)
+	if _, err := h.rw.Write(html.Buffer()); err != nil {
+		h.log.Error("write HTML response", zap.Error(err))
+	}
 }

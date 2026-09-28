@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoApp</title>
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --card: #ffffff;
+            --text: #222;
+            --text-muted: #666;
+            --border: #e5e7eb;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --sidebar: #ffffff;
+            --sidebar-hover: #f3f4f6;
+            --sidebar-active: #dbeafe;
+            --sidebar-active-text: #1e40af;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --sidebar: #1e293b;
+            --sidebar-hover: #334155;
+            --sidebar-active: #1e40af;
+            --sidebar-active-text: #dbeafe;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: fixed;
+            top: 0; bottom: 0; left: 0;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            font-size: 16px;
+        }
+        .logo-version {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .nav-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 12px;
+            margin-top: 8px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 14px;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+        .nav-item:hover { background: var(--sidebar-hover); }
+        .nav-item.active {
+            background: var(--sidebar-active);
+            color: var(--sidebar-active-text);
+            font-weight: 500;
+        }
+        .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        .theme-toggle {
+            margin-top: auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .theme-toggle:hover { background: var(--sidebar-hover); }
+        .switch {
+            width: 44px; height: 24px;
+            background: #cbd5e1;
+            border-radius: 12px;
+            position: relative;
+            transition: background 0.2s;
+        }
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 18px; height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            top: 3px; left: 3px;
+            transition: transform 0.2s;
+        }
+        [data-theme="dark"] .switch { background: var(--primary); }
+        [data-theme="dark"] .switch::after { transform: translateX(20px); }
+
+        .main {
+            flex: 1;
+            margin-left: 240px;
+            padding: 32px 40px;
+        }
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px;
+        }
+        .page-header h1 { font-size: 28px; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .btn {
+            padding: 10px 18px;
+            font-size: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--sidebar-hover); }
+        .btn-danger { background: var(--danger); }
+        .btn-danger:hover { background: var(--danger-hover); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .filters {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .filters label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-right: 4px;
+        }
+        select, input[type="date"], input[type="text"] {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            outline: none;
+        }
+        select:focus, input:focus { border-color: var(--primary); }
+
+        .empty {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-muted);
+        }
+        .empty-icon {
+            width: 64px; height: 64px;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            color: var(--text-muted);
+        }
+        .empty h3 {
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .empty p { font-size: 13px; }
+
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .task {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .task-checkbox {
+            width: 20px; height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        .task-body { flex: 1; }
+        .task-title { font-size: 15px; font-weight: 500; }
+        .task-title.done { text-decoration: line-through; color: var(--text-muted); }
+        .task-desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .task-meta { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+        .task-actions { display: flex; gap: 8px; }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .user-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .user-avatar {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        .user-name { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+        .user-phone { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+        .user-meta {
+            display: flex; gap: 8px; margin-bottom: 12px;
+            font-size: 11px; color: var(--text-muted);
+        }
+        .user-meta span {
+            padding: 2px 8px;
+            background: var(--sidebar-hover);
+            border-radius: 4px;
+        }
+        .user-actions { display: flex; gap: 8px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+        .stat-card.green::before { background: #10b981; }
+        .stat-card.yellow::before { background: #f59e0b; }
+        .stat-card.purple::before { background: #8b5cf6; }
+        .stat-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: var(--sidebar-hover);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .stat-value { font-size: 32px; font-weight: 600; margin-bottom: 4px; }
+        .stat-sub { font-size: 12px; color: var(--text-muted); }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .modal h2 { font-size: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text);
+            font-family: inherit;
+            outline: none;
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .error-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--danger);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 200;
+            font-size: 14px;
+            max-width: 400px;
+        }
+        .error-toast.active { display: block; }
+
+        .updated-at {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="logo">
+        <div class="logo-icon">✓</div>
+        <div>
+            TodoApp
+            <div class="logo-version">v1</div>
+        </div>
+    </div>
+
+    <div class="nav-label">Навигация</div>
+    <a class="nav-item active" data-page="tasks">
+        <span class="nav-icon">📋</span> Задачи
+    </a>
+    <a class="nav-item" data-page="users">
+        <span class="nav-icon">👥</span> Пользователи
+    </a>
+    <a class="nav-item" data-page="stats">
+        <span class="nav-icon">📊</span> Статистика
+    </a>
+
+    <div class="theme-toggle" id="themeToggle">
+        <span id="themeLabel">☀️ Light mode</span>
+        <div class="switch"></div>
+    </div>
+</aside>
+
+<main class="main">
+
+    <section class="page active" id="page-tasks">
+        <div class="page-header">
+            <h1>Задачи</h1>
+            <button class="btn" onclick="openTaskModal()">+ Новая задача</button>
+        </div>
+
+        <div class="filters">
+            <label>Пользователь</label>
+            <select id="tasksFilterUser">
+                <option value="">Все пользователи</option>
+            </select>
+            <label>На странице</label>
+            <select id="tasksFilterLimit">
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadTasks()">Сбросить</button>
+        </div>
+
+        <div id="tasksContainer"></div>
+    </section>
+
+    <section class="page" id="page-users">
+        <div class="page-header">
+            <h1>Пользователи</h1>
+            <button class="btn" onclick="openUserModal()">+ Новый пользователь</button>
+        </div>
+
+        <div class="filters">
+            <label>На странице</label>
+            <select id="usersFilterLimit">
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+
+        <div id="usersContainer" class="users-grid"></div>
+    </section>
+
+    <section class="page" id="page-stats">
+        <div class="page-header">
+            <h1>Статистика</h1>
+            <button class="btn btn-secondary" onclick="loadStats()">↻ Refresh</button>
+        </div>
+
+        <div class="filters">
+            <label>Пользователь</label>
+            <select id="statsFilterUser">
+                <option value="">Все пользователи</option>
+            </select>
+            <input type="date" id="statsFilterFrom">
+            <span style="color: var(--text-muted)">—</span>
+            <input type="date" id="statsFilterTo">
+            <button class="btn btn-secondary" onclick="loadStats()">Сбросить</button>
+            <button class="btn" onclick="loadStats()">Применить</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">➕</div>
+                <div class="stat-label">Создано задач</div>
+                <div class="stat-value" id="statCreated">0</div>
+                <div class="stat-sub">Всего в системе</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-icon">✓</div>
+                <div class="stat-label">Выполнено задач</div>
+                <div class="stat-value" id="statCompleted">0</div>
+                <div class="stat-sub">Успешно завершены</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">Процент выполнения</div>
+                <div class="stat-value" id="statRate">0.0%</div>
+                <div class="stat-sub">От всех созданных задач</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon">⏱</div>
+                <div class="stat-label">Среднее время выполнения</div>
+                <div class="stat-value" id="statAvg">—</div>
+                <div class="stat-sub">От создания до готовности</div>
+            </div>
+        </div>
+
+        <div class="empty" id="statsEmpty" style="display:none;">
+            Нет данных для выбранных фильтров.
+        </div>
+        <div class="updated-at" id="statsUpdated"></div>
+    </section>
+
+</main>
+
+<div class="modal-overlay" id="taskModal">
+    <div class="modal">
+        <h2>Новая задача</h2>
+        <form id="taskForm">
+            <div class="form-group">
+                <label>Пользователь</label>
+                <select name="author_user_id" id="taskModalAuthor" required></select>
+            </div>
+            <div class="form-group">
+                <label>Заголовок</label>
+                <input type="text" name="title" required maxlength="100">
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <textarea name="description" maxlength="1000"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">Отмена</button>
+                <button type="submit" class="btn">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="userModal">
+    <div class="modal">
+        <h2>Новый пользователь</h2>
+        <form id="userForm">
+            <div class="form-group">
+                <label>Имя</label>
+                <input type="text" name="full_name" required minlength="3" maxlength="100">
+            </div>
+            <div class="form-group">
+                <label>Телефон (необязательно)</label>
+                <input type="text" name="phone_number" placeholder="+79991234567">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Отмена</button>
+                <button type="submit" class="btn">Создать</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="error-toast" id="errorToast"></div>
+
+<script>
+    const API_BASE = '/api/v1';
+
+    async function api(path, opts = {}) {
+        const res = await fetch(API_BASE + path, {
+            headers: { 'Content-Type': 'application/json' },
+            ...opts,
+        });
+        if (!res.ok) {
+            let msg = `HTTP ${res.status}`;
+            try {
+                const body = await res.json();
+                msg = body.error || body.message || msg;
+            } catch {}
+            throw new Error(msg);
+        }
+        if (res.status === 204) return null;
+        return res.json();
+    }
+
+    let toastTimer;
+    function showError(err) {
+        const el = document.getElementById('errorToast');
+        el.textContent = err?.message || String(err);
+        el.classList.add('active');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('active'), 4000);
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+
+            if (page === 'tasks') loadTasks();
+            if (page === 'users') loadUsers();
+            if (page === 'stats') loadStats();
+        });
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    function applyTheme(theme) {
+        document.documentElement.dataset.theme = theme;
+        themeLabel.textContent = theme === 'dark' ? '🌙 Dark mode' : '☀️ Light mode';
+        localStorage.setItem('theme', theme);
+    }
+    themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.dataset.theme || 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+    applyTheme(localStorage.getItem('theme') || 'light');
+
+    function escapeHtml(str) {
+        return String(str ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;');
+    }
+    function initials(name) {
+        return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    }
+    const AVATAR_COLORS = ['#f59e0b','#8b5cf6','#3b82f6','#10b981','#ef4444','#ec4899','#14b8a6'];
+    function avatarColor(id) {
+        const sum = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+        return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+    }
+
+    async function loadUsers() {
+        try {
+            const limit = document.getElementById('usersFilterLimit').value;
+            const users = await api('/users?limit=' + limit);
+
+            const container = document.getElementById('usersContainer');
+            if (users.length === 0) {
+                container.innerHTML = `<div class="empty" style="grid-column: 1/-1;">
+        <div class="empty-icon">👥</div>
+        <h3>Пользователей пока нет</h3>
+        <p>Нажмите Новый пользователь, чтобы создать первого</p>
+      </div>`;
+                return;
+            }
+
+            container.innerHTML = users.map(u => `
+      <div class="user-card">
+        <div class="user-avatar" style="background:${avatarColor(u.id)}">${initials(u.full_name)}</div>
+        <div class="user-name">${escapeHtml(u.full_name)}</div>
+        <div class="user-phone">${u.phone_number ? '📞 ' + escapeHtml(u.phone_number) : '📞 Нет телефона'}</div>
+        <div class="user-meta">
+          <span>ID: ${escapeHtml(u.id.slice(0, 8))}</span>
+          <span>v${u.version}</span>
+        </div>
+        <div class="user-actions">
+          <button class="btn btn-secondary btn-sm" onclick="deleteUser('${u.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+
+            const selects = ['tasksFilterUser', 'statsFilterUser', 'taskModalAuthor'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const current = sel.value;
+                const placeholder = id === 'taskModalAuthor' ? 'Выберите пользователя' : 'Все пользователи';
+                sel.innerHTML = id === 'taskModalAuthor' ? '' : `<option value="">${placeholder}</option>`;
+                users.forEach(u => {
+                    const o = document.createElement('option');
+                    o.value = u.id;
+                    o.textContent = u.full_name;
+                    sel.appendChild(o);
+                });
+                if (current) sel.value = current;
+            });
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    async function createUser(e) {
+        e.preventDefault();
+        const form = e.target;
+        const fullName = form.full_name.value.trim();
+        const phoneNumber = form.phone_number.value.trim() || null;
+        try {
+            await api('/users', {
+                method: 'POST',
+                body: JSON.stringify({ full_name: fullName, phone_number: phoneNumber }),
+            });
+            form.reset();
+            closeUserModal();
+            await loadUsers();
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('Удалить пользователя?')) return;
+        try {
+            await api('/users/' + id, { method: 'DELETE' });
+            await loadUsers();
+            await loadTasks();
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    function openUserModal() { document.getElementById('userModal').classList.add('active'); }
+    function closeUserModal() { document.getElementById('userModal').classList.remove('active'); }
+
+    async function loadTasks() {
+        try {
+            const userId = document.getElementById('tasksFilterUser').value;
+            const limit = document.getElementById('tasksFilterLimit').value;
+
+            let path = '/tasks?limit=' + limit;
+            if (userId) path += '&user_id=' + userId;
+
+            const tasks = await api(path);
+            const container = document.getElementById('tasksContainer');
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="empty">
+        <div class="empty-icon">📋</div>
+        <h3>Задач пока нет</h3>
+        <p>Нажмите Новая задача, чтобы создать первую</p>
+      </div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="tasks-list">${tasks.map(t => `
+      <div class="task">
+        <input type="checkbox" class="task-checkbox" ${t.completed ? 'checked' : ''}
+               onchange="toggleTask('${t.id}', this.checked)">
+        <div class="task-body">
+          <div class="task-title ${t.completed ? 'done' : ''}">${escapeHtml(t.title)}</div>
+          ${t.description ? `<div class="task-desc">${escapeHtml(t.description)}</div>` : ''}
+          <div class="task-meta">Создано: ${new Date(t.created_at).toLocaleString('ru-RU')}</div>
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">Удалить</button>
+        </div>
+      </div>
+    `).join('')}</div>`;
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    async function createTask(e) {
+        e.preventDefault();
+        const form = e.target;
+        const authorId = form.author_user_id.value;
+        const title = form.title.value.trim();
+        const description = form.description.value.trim() || null;
+
+        if (!authorId) {
+            showError(new Error('Выберите пользователя'));
+            return;
+        }
+
+        try {
+            await api('/tasks', {
+                method: 'POST',
+                body: JSON.stringify({ title, description, author_user_id: authorId }),
+            });
+            form.reset();
+            closeTaskModal();
+            await loadTasks();
+            await loadStats();
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    async function toggleTask(id, completed) {
+        try {
+            await api('/tasks/' + id, {
+                method: 'PATCH',
+                body: JSON.stringify({ completed }),
+            });
+            await loadTasks();
+            await loadStats();
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    async function deleteTask(id) {
+        if (!confirm('Удалить задачу?')) return;
+        try {
+            await api('/tasks/' + id, { method: 'DELETE' });
+            await loadTasks();
+            await loadStats();
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    function openTaskModal() {
+        if (document.getElementById('taskModalAuthor').options.length === 0) {
+            showError(new Error('Сначала создайте пользователя'));
+            return;
+        }
+        document.getElementById('taskModal').classList.add('active');
+    }
+    function closeTaskModal() { document.getElementById('taskModal').classList.remove('active'); }
+
+    async function loadStats() {
+        try {
+            const userId = document.getElementById('statsFilterUser').value;
+            const from = document.getElementById('statsFilterFrom').value;
+            const to = document.getElementById('statsFilterTo').value;
+
+            const params = new URLSearchParams();
+            if (userId) params.set('user_id', userId);
+            if (from) params.set('from', from);
+            if (to) params.set('to', to);
+
+            const path = '/statistics' + (params.toString() ? '?' + params.toString() : '');
+            const s = await api(path);
+
+            document.getElementById('statCreated').textContent = s.tasks_created;
+            document.getElementById('statCompleted').textContent = s.tasks_completed;
+            document.getElementById('statRate').textContent =
+                s.tasks_completed_rate === null ? '0.0%' : s.tasks_completed_rate.toFixed(1) + '%';
+            document.getElementById('statAvg').textContent =
+                s.tasks_average_completion_time === null ? '—' : s.tasks_average_completion_time;
+
+            document.getElementById('statsEmpty').style.display = s.tasks_created === 0 ? 'block' : 'none';
+            document.getElementById('statsUpdated').textContent =
+                'Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+        } catch (err) {
+            showError(err);
+        }
+    }
+
+    document.getElementById('userForm').addEventListener('submit', createUser);
+    document.getElementById('taskForm').addEventListener('submit', createTask);
+    document.getElementById('usersFilterLimit').addEventListener('change', loadUsers);
+    document.getElementById('tasksFilterLimit').addEventListener('change', loadTasks);
+    document.getElementById('tasksFilterUser').addEventListener('change', loadTasks);
+
+    (async () => {
+        await loadUsers();
+        await loadTasks();
+        await loadStats();
+    })();
+</script>
+</body>
+</html>
