@@ -62,6 +62,7 @@ type PatchTaskResponse TasksDTOResponse
 // @Success 200 {object} PatchTaskResponse "Успешно изменённая задача"
 // @Failure 400 {object} core_http_response.ErrorResponse "Bad request"
 // @Failure 404 {object} core_http_response.ErrorResponse "Task not found"
+// @Failure 409 {object} core_http_response.ErrorResponse "Conflict"
 // @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
 // @Router /tasks/{id} [patch]
 func (h *TasksHTTPHandler) PatchTask(w http.ResponseWriter, r *http.Request) {

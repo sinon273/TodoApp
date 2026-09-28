@@ -9,6 +9,21 @@ definitions:
         example: short human-readable message
         type: string
     type: object
+  internal_features_statistics_transport_http.GetStatisticsResponse:
+    properties:
+      tasks_average_completion_time:
+        example: 1m30s
+        type: string
+      tasks_completed:
+        example: 10
+        type: integer
+      tasks_completed_rate:
+        example: 20
+        type: number
+      tasks_created:
+        example: 50
+        type: integer
+    type: object
   internal_features_tasks_transport_http.CreateTaskRequest:
     properties:
       author_user_id:
@@ -239,6 +254,39 @@ info:
   title: Golang Todo API
   version: "1.0"
 paths:
+  /statistics:
+    get:
+      description: Получение статистистики по задачам с опциональной фильтрацией по
+        user_id и/или временному промежутку
+      parameters:
+      - description: 'Начало промежутка рассмотрения статистики(включительно), формат:
+          YYYY-MM-DD'
+        in: query
+        name: from
+        type: string
+      - description: 'Конец промежутка рассмотрения статистики(не включительно), формат:
+          YYYY-MM-DD'
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное получение статистики
+          schema:
+            $ref: '#/definitions/internal_features_statistics_transport_http.GetStatisticsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse'
+      summary: Получение статистки
+      tags:
+      - statistics
   /tasks:
     get:
       description: Просмотр списка задач с опциональной пагинацией и/или фильтрацие
@@ -380,6 +428,10 @@ paths:
             $ref: '#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse'
         "404":
           description: Task not found
+          schema:
+            $ref: '#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse'
         "500":
