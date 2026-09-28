@@ -67,8 +67,8 @@ func (r *StatisticsRepository) GetTasks(
 			&taskModel.Title,
 			&taskModel.Description,
 			&taskModel.Completed,
-			&taskModel.CreatedAt,
 			&taskModel.CompletedAt,
+			&taskModel.CreatedAt,
 			&taskModel.AuthorUserId,
 		)
 		if err != nil {
