@@ -30,7 +30,7 @@ func (r *PatchUserRequest) Validate() error {
 	}
 
 	if r.PhoneNumber.Set {
-		if r.PhoneNumber.Value == nil {
+		if r.PhoneNumber.Value == nil && r.PhoneNumber.Value != nil {
 			phoneNumberLen := len([]rune(*r.PhoneNumber.Value))
 			if phoneNumberLen < 10 || phoneNumberLen > 15 {
 				return fmt.Errorf("`PhoneNumber` length must be between 10 and 15")
