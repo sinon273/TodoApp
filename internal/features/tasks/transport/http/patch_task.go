@@ -12,9 +12,9 @@ import (
 )
 
 type PatchTaskRequest struct {
-	Title       core_http_types.Nullable[string] `json:"title"`
-	Description core_http_types.Nullable[string] `json:"description"`
-	Completed   core_http_types.Nullable[bool]   `json:"completed"`
+	Title       core_http_types.Nullable[string] `json:"title" swaggertype:"string" example:"Новое название"`
+	Description core_http_types.Nullable[string] `json:"description" swaggertype:"string" example:"Новое описание"`
+	Completed   core_http_types.Nullable[bool]   `json:"completed" swaggertype:"boolean" example:"true"`
 }
 
 func (r *PatchTaskRequest) Validate() error {
@@ -44,8 +44,26 @@ func (r *PatchTaskRequest) Validate() error {
 	return nil
 }
 
-type PatchUserResponse TasksDTOResponse
+type PatchTaskResponse TasksDTOResponse
 
+// PatchTask godoc
+// @Summary изменение задачи
+// @Description Изменение информации об уже существующей в системе задачи
+// @Description ### Логика обновления полей (Three-state logic):
+// @Description 1. **Поле не передано**: `description` игнорируется, значение в бд не меняется
+// @Description 1. **Явно передано значение**: `"description": "Утром в 6:30 выйти на пробежку" - устанавливает новое описание для задачи`
+// @Description 1. **Передан null**: `"description": null` - очищает поле в БД (set to NULL)
+// @Description 1. Ограничение: `title` и `completed` не могут быть выставлены как null
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param id path uuid true "ID изменяемой задачи"
+// @Param request body PatchTaskRequest true "PatchTask тело запроса"
+// @Success 200 {object} PatchTaskResponse "Успешно изменённая задача"
+// @Failure 400 {object} core_http_response.ErrorResponse "Bad request"
+// @Failure 404 {object} core_http_response.ErrorResponse "Task not found"
+// @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Router /tasks/{id} [patch]
 func (h *TasksHTTPHandler) PatchTask(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := core_logger.FromContext(ctx)
@@ -76,7 +94,7 @@ func (h *TasksHTTPHandler) PatchTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := PatchUserResponse(taskDTOFromDomain(taskDomain))
+	response := PatchTaskResponse(taskDTOFromDomain(taskDomain))
 
 	responseHandler.JSONResponse(response, http.StatusOK)
 

@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	_ "TodoApp/docs"
 )
 
 func loadTimeZone() *time.Location {
@@ -40,6 +42,11 @@ func loadTimeZone() *time.Location {
 	return zone
 }
 
+// @title       Golang Todo API
+// @version     1.0
+// @description Todo Application REST-API scheme
+// @host 		127.0.0.1:5050
+// @BasePath    /api/v1
 func main() {
 	timeZone := loadTimeZone()
 	time.Local = timeZone
@@ -82,9 +89,12 @@ func main() {
 	statisticsTransportHTTP := statistics_transport_http.NewStatisticsHTTPHandler(statisticsService)
 
 	logger.Debug("initializing HTTP server")
+	httpConfig := core_http_server.NewConfigMust()
+
 	httpServer := core_http_server.NewHTTPServer(
-		core_http_server.NewConfigMust(),
+		httpConfig,
 		logger,
+		core_http_middleware.CORS(httpConfig.AllowedOrigins),
 		core_http_middleware.RequestID(),
 		core_http_middleware.Logger(logger),
 		core_http_middleware.Trace(),
@@ -97,6 +107,7 @@ func main() {
 	apiVersionRouter.RegisterRoutes(statisticsTransportHTTP.Routes()...)
 
 	httpServer.RegisterAPIRouters(apiVersionRouter)
+	httpServer.RegisterSwagger()
 
 	if err = httpServer.Run(ctx); err != nil {
 		logger.Error("HTTP server run error", zap.Error(err))
