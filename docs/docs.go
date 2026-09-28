@@ -15,6 +15,52 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/statistics": {
+            "get": {
+                "description": "Получение статистистики по задачам с опциональной фильтрацией по user_id и/или временному промежутку",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "statistics"
+                ],
+                "summary": "Получение статистки",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Начало промежутка рассмотрения статистики(включительно), формат: YYYY-MM-DD",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Конец промежутка рассмотрения статистики(не включительно), формат: YYYY-MM-DD",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное получение статистики",
+                        "schema": {
+                            "$ref": "#/definitions/internal_features_statistics_transport_http.GetStatisticsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/tasks": {
             "get": {
                 "description": "Просмотр списка задач с опциональной пагинацией и/или фильтрацие по ID автора задачи",
@@ -219,6 +265,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Task not found",
+                        "schema": {
+                            "$ref": "#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/TodoApp_internal_core_transport_http_response.ErrorResponse"
                         }
@@ -455,6 +507,27 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "short human-readable message"
+                }
+            }
+        },
+        "internal_features_statistics_transport_http.GetStatisticsResponse": {
+            "type": "object",
+            "properties": {
+                "tasks_average_completion_time": {
+                    "type": "string",
+                    "example": "1m30s"
+                },
+                "tasks_completed": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "tasks_completed_rate": {
+                    "type": "number",
+                    "example": 20
+                },
+                "tasks_created": {
+                    "type": "integer",
+                    "example": 50
                 }
             }
         },
