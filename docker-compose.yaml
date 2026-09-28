@@ -46,11 +46,23 @@ services:
   port-forwarder:
     image: alpine/socat:1.8.0.3
     container_name: todoapp-postgres-port-forwarder
-    command: tcp-listen:5433,fork,reuseaddr tcp-connect:todoapp-postgres:5432
+    command: tcp-listen:5432,fork,reuseaddr tcp-connect:todoapp-postgres:5432
     ports:
-      - "127.0.0.1:5433:5433"
+      - "127.0.0.1:5432:5432"
     networks:
       - todoapp-network
+
+  swagger:
+    build:
+      context: ${PROJECT_ROOT}
+      dockerfile_inline: |
+        FROM golang:1.24.1-alpine
+        RUN apk add --no-cache git
+        RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
+        WORKDIR /code
+        ENTRYPOINT ["swag"]
+    volumes:
+      - ${PROJECT_ROOT}:/code
 
 networks:
   todoapp-network:

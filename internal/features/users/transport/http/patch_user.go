@@ -13,8 +13,8 @@ import (
 )
 
 type PatchUserRequest struct {
-	FullName    core_http_types.Nullable[string] `json:"full_name"`
-	PhoneNumber core_http_types.Nullable[string] `json:"phone_number"`
+	FullName    core_http_types.Nullable[string] `json:"full_name" swaggertype:"string" example:"Денис Денисоввич"`
+	PhoneNumber core_http_types.Nullable[string] `json:"phone_number" swaggertype:"string" example:"+78005553535"`
 }
 
 func (r *PatchUserRequest) Validate() error {
@@ -29,16 +29,14 @@ func (r *PatchUserRequest) Validate() error {
 		}
 	}
 
-	if r.PhoneNumber.Set {
-		if r.PhoneNumber.Value == nil && r.PhoneNumber.Value != nil {
-			phoneNumberLen := len([]rune(*r.PhoneNumber.Value))
-			if phoneNumberLen < 10 || phoneNumberLen > 15 {
-				return fmt.Errorf("`PhoneNumber` length must be between 10 and 15")
-			}
+	if r.PhoneNumber.Set && r.PhoneNumber.Value != nil {
+		phoneNumberLen := len([]rune(*r.PhoneNumber.Value))
+		if phoneNumberLen < 10 || phoneNumberLen > 15 {
+			return fmt.Errorf("`PhoneNumber` length must be between 10 and 15")
+		}
 
-			if !strings.HasPrefix(*r.PhoneNumber.Value, "+") {
-				return fmt.Errorf("`PhoneNumber` must startswith '+'")
-			}
+		if !strings.HasPrefix(*r.PhoneNumber.Value, "+") {
+			return fmt.Errorf("`PhoneNumber` must startswith '+'")
 		}
 	}
 
@@ -47,6 +45,24 @@ func (r *PatchUserRequest) Validate() error {
 
 type PatchUserResponse UserDTOResponse
 
+// PatchUser godoc
+// @Summary изменение пользователя
+// @Description Изменение информации об уже существующем в системе пользователе
+// @Description ### Логика обновления полей (Three-state logic):
+// @Description 1. **Поле не передано**: `phone_number` игнорируется, значение в бд не меняется
+// @Description 2. **Явно передано значение**: `"phone_number": "+78005553535"` - устанавливает новый номер телефона в бд
+// @Description 3. **Передан null**: `"phone_number": null` - очищает поле в БД (set to NULL)
+// @Description 4. Ограничение: `full_name` не может быть выставлен как null
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path uuid true "ID изменяемого пользователя"
+// @Param request body PatchUserRequest true "PatchUser тело запроса"
+// @Success 200 {object} PatchUserResponse "Успешно изменённый пользователь"
+// @Failure 400 {object} core_http_response.ErrorResponse "Bad request"
+// @Failure 409 {object} core_http_response.ErrorResponse "Conflict"
+// @Failure 500 {object} core_http_response.ErrorResponse "Internal server error"
+// @Router /users/{id} [patch]
 func (h *UsersHTTPHandler) PatchUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := core_logger.FromContext(ctx)
@@ -56,7 +72,7 @@ func (h *UsersHTTPHandler) PatchUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		responseHandler.ErrorResponse(
 			err,
-			"failed to get userID oath value",
+			"failed to get userID path value",
 		)
 
 		return
