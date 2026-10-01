@@ -11,7 +11,7 @@ import (
 func GetUUIDPathValue(r *http.Request, key string) (uuid.UUID, error) {
 	pathValue := r.PathValue(key)
 	if pathValue == "" {
-		return uuid.Nil, fmt.Errorf("no key='%s' in path values: %w", key, core_error.ErrInvalidArgument)
+		return uuid.Nil, fmt.Errorf("no key='%s' task_in path values: %w", key, core_error.ErrInvalidArgument)
 	}
 
 	val, err := uuid.Parse(pathValue)

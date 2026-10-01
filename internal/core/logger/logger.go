@@ -81,7 +81,7 @@ func (l *Logger) With(field ...zap.Field) *Logger {
 func FromContext(ctx context.Context) *Logger {
 	log, ok := ctx.Value(key).(*Logger)
 	if !ok {
-		panic("no logger in context")
+		panic("no logger task_in context")
 	}
 
 	return log
