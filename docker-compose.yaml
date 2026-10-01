@@ -5,6 +5,8 @@ services:
       dockerfile: ${PROJECT_ROOT}/cmd/todoapp/Dockerfile
     container_name: todoapp
     environment:
+      - REDIS_HOST=todoapp-redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - HTTP_ADDR=:5050
       - HTTP_SHUTDOWN_TIMEOUT=${HTTP_SHUTDOWN_TIMEOUT}
       - POSTGRES_HOST=todoapp-postgres
@@ -14,14 +16,26 @@ services:
       - POSTGRES_TIMEOUT=${POSTGRES_TIMEOUT}
       - LOGGER_LEVEL=${LOGGER_LEVEL}
       - TIME_ZONE=${TIME_ZONE}
-      - LOGGER_FOLDER=/app/out/logs
+      - LOGGER_FOLDER=/app/task_out/logs
     volumes:
-      - ${PROJECT_ROOT}/out/logs:/app/out/logs
+      - ${PROJECT_ROOT}/task_out/logs:/app/task_out/logs
     ports:
       - "5050:5050"
     networks:
       - todoapp-network
     restart: always
+
+  todoapp-redis:
+    image: redis:8.6.1
+    container_name: todoapp-env-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - ${PROJECT_ROOT}/task_out/redis_data:/data
+    restart: always
+    networks:
+      - todoapp-network
 
   todoapp-postgres:
     image: postgres:18.1-bookworm
@@ -31,7 +45,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - ./out/pgdata:/var/lib/postgresql
+      - ./task_out/pgdata:/var/lib/postgresql
     restart: always
     networks:
       - todoapp-network

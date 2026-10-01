@@ -4,14 +4,16 @@ import (
 	core_logger "TodoApp/internal/core/logger"
 	core_postgres_pool "TodoApp/internal/core/repository/postgres/pool"
 	core_postgres_pool_pgx "TodoApp/internal/core/repository/postgres/pool/pgx"
+	core_redis_pool_goredis "TodoApp/internal/core/repository/redis/pool/goredis"
 	core_http_middleware "TodoApp/internal/core/transport/http/middleware"
 	core_http_server "TodoApp/internal/core/transport/http/server"
 	statistics_postgres_repository "TodoApp/internal/features/statistics/repository/postgres"
 	statistics_service "TodoApp/internal/features/statistics/service"
 	statistics_transport_http "TodoApp/internal/features/statistics/transport/http"
-	tasks_postgres_repository "TodoApp/internal/features/tasks/repository/postgres"
+	tasks_http "TodoApp/internal/features/tasks/adapters/task_in/http"
+	task_cached_repository "TodoApp/internal/features/tasks/adapters/task_out/cached"
+	tasks_postgres_repository "TodoApp/internal/features/tasks/adapters/task_out/postgres"
 	task_service "TodoApp/internal/features/tasks/service"
-	tasks_transport "TodoApp/internal/features/tasks/transport/http"
 	users_postgres_repository "TodoApp/internal/features/users/repository/postgres"
 	users_service "TodoApp/internal/features/users/service"
 	users_transport_http "TodoApp/internal/features/users/transport/http"
@@ -76,6 +78,16 @@ func main() {
 	}
 	defer pool.Close()
 
+	logger.Debug("initializing redis connection pool")
+	redisPool, err := core_redis_pool_goredis.NewPool(
+		ctx,
+		core_redis_pool_goredis.NewConfigMust(),
+	)
+	if err != nil {
+		logger.Fatal("failed to init redis connection pool", zap.Error(err))
+	}
+	defer redisPool.Close()
+
 	logger.Debug("initializing feature", zap.String("feature", "users"))
 	usersRepository := users_postgres_repository.NewUsersRepository(pool)
 	usersService := users_service.NewUserService(usersRepository)
@@ -83,8 +95,9 @@ func main() {
 
 	logger.Debug("initializing feature", zap.String("feature", "tasks"))
 	tasksRepository := tasks_postgres_repository.NewTaskRepository(pool)
-	tasksService := task_service.NewTasksService(tasksRepository)
-	tasksTransportHTTP := tasks_transport.NewTasksHTTPHandler(tasksService)
+	cachedTasksRepository := task_cached_repository.NewCachedRepository(redisPool, tasksRepository, logger)
+	tasksService := task_service.NewTasksService(cachedTasksRepository)
+	tasksTransportHTTP := tasks_http.NewTasksHTTPHandler(tasksService)
 
 	logger.Debug("initializing feature", zap.String("feature", "statistics"))
 	statisticsRepository := statistics_postgres_repository.NewStatisticsRepository(pool)

@@ -55,6 +55,7 @@ env-port-close:
 todoapp-run:
 	@export LOGGER_FOLDER=${PROJECT_ROOT}/out/logs && \
 	export POSTGRES_HOST=localhost && \
+	export REDIS_HOST=localhost && \
 	go mod tidy && \
 	go run ${PROJECT_ROOT}/cmd/todoapp/main.go
 
@@ -75,3 +76,9 @@ ps:
 
 todoapp-undeploy:
 	@docker compose down todoapp
+
+env-redis-up:
+	@docker compose up -d todoapp-redis
+
+env-redis-down:
+	@docker compose down todoapp-redis

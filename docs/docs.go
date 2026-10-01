@@ -30,13 +30,13 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Начало промежутка рассмотрения статистики(включительно), формат: YYYY-MM-DD",
                         "name": "from",
-                        "in": "query"
+                        "task_in": "query"
                     },
                     {
                         "type": "string",
                         "description": "Конец промежутка рассмотрения статистики(не включительно), формат: YYYY-MM-DD",
                         "name": "to",
-                        "in": "query"
+                        "task_in": "query"
                     }
                 ],
                 "responses": {
@@ -76,13 +76,13 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Размер страницы с задачами",
                         "name": "limit",
-                        "in": "query"
+                        "task_in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "Смещение страницы с задачами",
                         "name": "offset",
-                        "in": "query"
+                        "task_in": "query"
                     }
                 ],
                 "responses": {
@@ -125,7 +125,7 @@ const docTemplate = `{
                     {
                         "description": "CreateTask тело запроса",
                         "name": "request",
-                        "in": "body",
+                        "task_in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/internal_features_tasks_transport_http.CreateTaskRequest"
@@ -243,7 +243,7 @@ const docTemplate = `{
                     {
                         "description": "PatchTask тело запроса",
                         "name": "request",
-                        "in": "body",
+                        "task_in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/internal_features_tasks_transport_http.PatchTaskRequest"
@@ -299,13 +299,13 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Размер страницы с пользователями",
                         "name": "limit",
-                        "in": "query"
+                        "task_in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "Смещение страницы с пользователями",
                         "name": "offset",
-                        "in": "query"
+                        "task_in": "query"
                     }
                 ],
                 "responses": {
@@ -348,7 +348,7 @@ const docTemplate = `{
                     {
                         "description": "CreateUser тело запроса",
                         "name": "request",
-                        "in": "body",
+                        "task_in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/internal_features_users_transport_http.CreateUserRequest"
@@ -460,7 +460,7 @@ const docTemplate = `{
                     {
                         "description": "PatchUser тело запроса",
                         "name": "request",
-                        "in": "body",
+                        "task_in": "body",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/internal_features_users_transport_http.PatchUserRequest"
